@@ -1,0 +1,20 @@
+{ "name": "kwikemon"
+, "version": "0.0.1"
+, "description": "monitor one-off things on your servers"
+, "author": "Sami Samhuri <sami@samhuri.net>"
+, "license": "MIT"
+, "repository": "https://github.com/samsonjs/kwikemon"
+, "keywords": [ "monitor", "server", "watch", "one-off", "task" ]
+, "main": "kwikemon.js"
+, "bin": {
+    "kwikemon": "./bin/kwikemon"
+  , "kwikemond": "./bin/kwikemond"
+  }
+, "dependencies": {
+    "paramify": "0.0.x"
+  , "redis": "0.8.x"
+  }
+, "engines": {
+    "node": ">=0.10"
+  }
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+var kwikemon = require('../kwikemon.js')
+  , name = process.argv[2]
+  ;
+
+process.stdin.pipe(kwikemon.createWriter(name));
+process.stdin.on('end', function() {
+  process.exit(0);
+});
