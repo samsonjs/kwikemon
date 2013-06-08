@@ -87,7 +87,7 @@ if (opt && opt[0] == '-') {
   case '-t':
   case '--ttl':
     var name = process.argv[3];
-    kwikemon.fetchTTL(name, function(err, ttl) {
+    kwikemon.ttl(name, function(err, ttl) {
       if (typeof ttl == 'number') {
         console.log(ttl);
         process.exit(0);

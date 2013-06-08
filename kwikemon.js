@@ -9,7 +9,7 @@ module.exports = {
   // read
 , exists: callbackOptional(exists)
 , fetch: callbackOptional(fetch)
-, fetchTTL: callbackOptional(fetchTTL)
+, ttl: callbackOptional(ttl)
 , list: list
 , fetchAll: fetchAll
 , count: count
@@ -122,7 +122,7 @@ function fetch(name, cb) {
   redis.hgetall(k(name), cb);
 }
 
-function fetchTTL(name, cb) {
+function ttl(name, cb) {
   redis.ttl(k(name), cb);
 }
 

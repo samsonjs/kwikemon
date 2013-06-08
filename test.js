@@ -37,7 +37,7 @@ describe("kwikemon", function() {
 
     it("should set custom ttls", function(done) {
       kwikemon.set('foo', 'bar', { ttl: 1 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl <= 1);
           done();
         });
@@ -46,7 +46,7 @@ describe("kwikemon", function() {
 
     it("should not expire with a ttl of zero", function(done) {
       kwikemon.set('foo', 'bar', { ttl: 0 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl == -1);
           done();
         });
@@ -55,7 +55,7 @@ describe("kwikemon", function() {
 
     it("should not expire when ttl is < 0", function(done) {
       kwikemon.set('foo', 'bar', { ttl: -1 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl == -1);
           done();
         });
@@ -115,10 +115,10 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#fetchTTL", function() {
+  describe("#ttl", function() {
     it("should fetch the last TTL set", function(done) {
       kwikemon.set('foo', 'bar', { ttl: 300 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl <= 300);
           done();
         });
@@ -126,7 +126,7 @@ describe("kwikemon", function() {
     });
 
     it("should return -1 for non-existent monitors", function(done) {
-      kwikemon.fetchTTL('non-existent', function(err, ttl) {
+      kwikemon.ttl('non-existent', function(err, ttl) {
         assert(ttl == -1);
         done();
       });
