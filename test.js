@@ -12,8 +12,8 @@ before(function(done) {
     done();
   });
 });
-beforeEach(kwikemon.removeAll);
-after(kwikemon.removeAll);
+beforeEach(kwikemon.clear);
+after(kwikemon.clear);
 
 describe("kwikemon", function() {
   describe("#set", function() {
@@ -36,17 +36,17 @@ describe("kwikemon", function() {
     });
 
     it("should set custom ttls", function(done) {
-      kwikemon.set('foo', 'bar', { ttl: 1 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
-          assert(ttl <= 1);
+      kwikemon.setex('foo', 'bar', 5, function(err) {
+        kwikemon.ttl('foo', function(err, ttl) {
+          assert(ttl <= 5);
           done();
         });
       })
     });
 
     it("should not expire with a ttl of zero", function(done) {
-      kwikemon.set('foo', 'bar', { ttl: 0 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+      kwikemon.setex('foo', 'bar', 0, function(err) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl == -1);
           done();
         });
@@ -54,8 +54,8 @@ describe("kwikemon", function() {
     });
 
     it("should not expire when ttl is < 0", function(done) {
-      kwikemon.set('foo', 'bar', { ttl: -1 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+      kwikemon.setex('foo', 'bar', -1, function(err) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl == -1);
           done();
         });
@@ -65,30 +65,32 @@ describe("kwikemon", function() {
 
   describe("#writer", function() {
     it("should monitor each line of text written", function(done) {
-      var writer = kwikemon.writer('foo');
-      writer.once('monitor', function(name, text) {
-        assert(text == 'a');
+      kwikemon.writer('foo', function(err, writer) {
         writer.once('monitor', function(name, text) {
-          assert(text == 'b');
-          done();
+          assert(text == 'a');
+          writer.once('monitor', function(name, text) {
+            assert(text == 'b');
+            done();
+          });
+          writer.write("b\n");
         });
-        writer.write("b\n");
+        writer.write("a\n");
       });
-      writer.write("a\n");
     });
 
     it("should only monitor complete lines of text", function(done) {
-      var writer = kwikemon.writer('foo');
-      writer.once('monitor', function(name, text) {
-        assert(text == 'complete');
+      kwikemon.writer('foo', function(err, writer) {
         writer.once('monitor', function(name, text) {
-          assert(text == 'incomplete');
-          done();
+          assert(text == 'complete');
+          writer.once('monitor', function(name, text) {
+            assert(text == 'incomplete');
+            done();
+          });
+          writer.write("plete\n");
         });
-        writer.write("plete\n");
+        writer.write("complete\n");
+        writer.write("incom");
       });
-      writer.write("complete\n");
-      writer.write("incom");
     });
   });
 
@@ -115,10 +117,10 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#fetchTTL", function() {
+  describe("#ttl", function() {
     it("should fetch the last TTL set", function(done) {
-      kwikemon.set('foo', 'bar', { ttl: 300 }, function(err) {
-        kwikemon.fetchTTL('foo', function(err, ttl) {
+      kwikemon.setex('foo', 'bar', 300, function(err) {
+        kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl <= 300);
           done();
         });
@@ -126,7 +128,7 @@ describe("kwikemon", function() {
     });
 
     it("should return -1 for non-existent monitors", function(done) {
-      kwikemon.fetchTTL('non-existent', function(err, ttl) {
+      kwikemon.ttl('non-existent', function(err, ttl) {
         assert(ttl == -1);
         done();
       });
@@ -187,12 +189,12 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#removeAll", function() {
-    it("should remove the named monitor", function(done) {
+  describe("#clear", function() {
+    it("should remove all monitors", function(done) {
       async.series([
           kwikemon.set('foo', 'bar')
         , kwikemon.set('baz', 'quux')
-        , kwikemon.removeAll
+        , kwikemon.clear
         , kwikemon.exists('foo')
         , kwikemon.exists('baz')
         , kwikemon.count

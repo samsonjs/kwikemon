@@ -41,26 +41,54 @@ This is very much a work in progress.
 
 You can use kwikemon as a library.
 
-    var kwikemon = require('kiwkemon');
+    var kwikemon = require('kiwkemon')
 
-    kwikemon.set('foo', 'bar', function(err) {
-      kwikemon.fetch('foo', function(err, text) {
-        console.log('foo = ' + text);
-      });
-    });
+Change the redis connection:
 
-    kwikemon.fetchAll(function(err, monitors) {
-      Object.keys(monitors).forEach(function (name) {
-        console.log(name + ' = ' + monitors[name]);
-      });
-    });
+    kwikemon.redis([newRedis])
+
+Configure:
+
+    kwikemon.keyPrefix = 'custom:';
+    kwikemon.defaultTTL = 3600; // one hour
+
+#### Writing
+
+    kwikemon.set(name, text, function(err))
 
 Monitors expire 1 day after the last time they were set by default. You can pass in any `ttl` you
 want though.
 
     // never expire
-    kwikemon.set('foo', 'bar', { ttl: 0 });
+    kwikemon.setex(name, text, 0)
 
+Get a stream for writing to a monitor:
+
+    w = kwikemon.writer(name)
+    w.write('status\n')
+
+With a custom TTL:
+
+    w = kwikemon.writer(name, ttl)
+
+There's a 'monitor' event if you care when it sets text.
+
+    w.on('monitor', function(name, text));
+
+#### Reading
+
+    kwikemon.exists(name, function(err, exists))
+    kwikemon.fetch(name, function(err, mon))
+    kwikemon.ttl(name, function(err, ttl))
+    kwikemon.list(function(err, names))
+    kwikemon.fetchAll(function(err, monitors))
+    kwikemon.count(function(err, n))
+
+#### Deleting
+
+    kwikemon.remove(function(err))
+    kwikemon.clear(function(err))
+    kwikemon.sweep(function(err))
 
 ## Protocol
 

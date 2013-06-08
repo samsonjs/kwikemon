@@ -25,7 +25,7 @@ if (opt && opt[0] == '-') {
   switch (opt) {
   case '-c':
   case '--clear':
-    kwikemon.removeAll(function(err) {
+    kwikemon.clear(function(err) {
       process.exit(0);
     });
     break;
@@ -110,9 +110,11 @@ else if (name && text) {
   });
 }
 else if (name) {
-  process.stdin.pipe(kwikemon.createWriter(name));
-  process.stdin.on('end', function() {
-    process.exit(0);
+  kwikemon.writer(name, function(err, writer) {
+    process.stdin.pipe(writer);
+    process.stdin.on('end', function() {
+      process.exit(0);
+    });
   });
 }
 else {
