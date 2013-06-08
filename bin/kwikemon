@@ -110,7 +110,7 @@ else if (name && text) {
   });
 }
 else if (name) {
-  process.stdin.pipe(kwikemon.createWriter(name));
+  process.stdin.pipe(kwikemon.writer(name));
   process.stdin.on('end', function() {
     process.exit(0);
   });
