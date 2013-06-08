@@ -13,6 +13,11 @@
 , "dependencies": {
     "paramify": "0.0.x"
   , "redis": "0.8.x"
+  , "async": "0.2.x"
+  }
+, "devDependencies": {
+    "mocha": "1.10.x"
+  , "better-assert": "1.0.x"
   }
 , "engines": {
     "node": ">=0.10"

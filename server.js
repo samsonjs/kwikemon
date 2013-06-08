@@ -31,9 +31,17 @@ function stop() {
 }
 
 function handleRequest(req, res) {
-  var name = req.url.replace(/^\//, '');
+  var name = req.url.replace(/^\//, '')
+    , type = 'html'
+    , m
+    ;
+  if (name == 'favicon.ico') return res.end();
+  if (m = name.match(/\.(json|txt)$/)) {
+    type = m[1];
+    name = name.replace(RegExp('\.' + type + '$'), '');
+  }
   if (name) {
-    kwikemon.fetchMonitor(name, function(err, text) {
+    kwikemon.fetch(name, function(err, text) {
       if (err) {
         res.end('error: ' + (err.message || 'unknown'));
         return;
@@ -43,7 +51,7 @@ function handleRequest(req, res) {
   }
   // all
   else {
-    kwikemon.fetchMonitors(function(err, monitors) {
+    kwikemon.fetchAll(function(err, monitors) {
       if (err) {
         res.end('error: ' + (err.message || 'unknown'));
         return;

@@ -1,72 +1,155 @@
 // Copyright 2013 Sami Samhuri
 
 module.exports = {
-  // read
-  fetchMonitor: fetchMonitor
-, fetchMonitors: fetchMonitors
 
   // write
-, monitor: monitor
-, createWriter: createWriter
+  set: callbackOptional(set)
+, writer: writer
+
+  // read
+, exists: callbackOptional(exists)
+, fetch: callbackOptional(fetch)
+, fetchTTL: callbackOptional(fetchTTL)
+, list: list
+, fetchAll: fetchAll
+, count: count
+
+  // remove
+, remove: callbackOptional(remove)
+, removeAll: removeAll
+, sweep: sweep
+
+  // change redis client
+, redis: setRedis
 };
 
-var redis = require('redis').createClient()
+var async = require('async')
+  , redis = require('redis').createClient()
   , LineEmitter = require('./line_emitter.js')
   ;
 
-function monitor(name, text, options) {
-  console.log(name,'=',text)
-  options = options || {};
-  if (typeof options == 'function') {
-    options = { cb: options };
-  }
-  var key = 'kwikemon:monitor:' + name
-    , timeout = options.timeout || 86400
-    ;
-  console.log('set',key,text)
-  redis.set(key, text, function(err, status) {
-    console.log('set',key,text)
-    if (err) throw err;
-    if (timeout >= 0) {
-      redis.expire(key, timeout);
+function setRedis(newRedis) {
+  if (redis) redis.end();
+  redis = newRedis;
+}
+
+// Make the callback argument of a function optional.
+// If the callback is passed it will call the function
+// normally. If the callback isn't given a function
+// that accepts the callback is returned, with the
+// rest of the arguments fixed (like bind).
+//
+// function fetch(id, cb) { db.fetch(id, cb); }
+// fetch = callbackOptional(fetch);
+//
+// function print(err, x) { if (err) throw err; console.log(x); }
+//
+// fetch(1, print);
+//
+// var fetch1 = fetch(1);
+// fetch1(print);
+function callbackOptional(fn, ctx) {
+  return function() {
+    var args = Array.prototype.slice.call(arguments);
+    var cb = args[args.length - 1];
+    if (typeof cb == 'function') {
+      fn.apply(ctx, arguments);
     }
-    redis.sadd('kwikemon:monitors', name, function(err, status) {
-      if (options.cb) options.cb();
-    });
+    else {
+      return function(cb) {
+        args.push(cb);
+        fn.apply(ctx, args);
+      };
+    }
+  };
+}
+
+function k(name) {
+  return 'kwikemon:monitor:' + name;
+}
+
+function exists(name, cb) {
+  redis.exists(k(name), function(err, exists) {
+    if (err) return cb(err);
+    cb(null, exists == 1);
   });
 }
 
-function createWriter(name) {
+// options:
+//   - ttl: time to live in seconds, <= 0 to never expire
+function set(name, text, options, cb) {
+  if (typeof options == 'function') {
+    cb = options;
+    options = null;
+  }
+  options = options || {};
+  var key = k(name)
+    , ttl = ('ttl' in options) ? options.ttl : 86400
+    ;
+  exists(name, function(err, exists) {
+    var fields = {
+          text: text
+        , modified: Date.now()
+        }
+      , multi = redis.multi()
+      ;
+    if (!exists) {
+      fields.created = Date.now();
+    }
+    multi
+      .hmset(key, fields)
+      .hincrby(key, 'updates', 1);
+    if (ttl != null) {
+      multi.expire(key, ttl);
+    }
+    multi.sadd('kwikemon:monitors', name);
+    multi.exec(cb);
+  });
+}
+
+function writer(name) {
   var le = new LineEmitter();
   le.on('line', function(line) {
-    monitor(name, line);
+    set(name, line, function(err) {
+      if (err) throw err;
+      le.emit('monitor', name, line);
+    });
   });
   return le;
 }
 
-function fetchMonitor(name, cb) {
-  redis.get('kwikemon:monitor:' + name, cb);
+function fetch(name, cb) {
+  redis.hgetall(k(name), cb);
 }
 
-function fetchMonitors(cb) {
-  var monitors = {}
-    , i = 0
+function fetchTTL(name, cb) {
+  redis.ttl(k(name), cb);
+}
+
+function count(cb) {
+  redis.scard('kwikemon:monitors', cb);
+}
+
+function sweep(cb) {
+  var i = 0
     , n
     , checkIfDone = function() {
         i += 1;
-        if (i == n) cb(null, monitors);
+        if (i == n) cb();
       }
     ;
   redis.smembers('kwikemon:monitors', function(err, names) {
     if (err) return cb(err);
     n = names.length;
+    if (n == 0) return cb();
     names.forEach(function(name) {
-      fetchMonitor(name, function(err, text) {
+      exists(name, function(err, exists) {
         if (err) {
-          // missing? probably don't care
+          // meh, ignore it
         }
-        else {
-          monitors[name] = text;
+        // remove expired monitors
+        else if (!exists) {
+          remove(name);
         }
         checkIfDone();
       });
@@ -74,3 +157,48 @@ function fetchMonitors(cb) {
   });
 }
 
+function list(cb) {
+  sweep(function(err) {
+    if (err) return cb(err);
+    redis.smembers('kwikemon:monitors', cb);
+  });
+}
+
+function fetchAll(cb) {
+  var monitors = {};
+  list(function(err, names) {
+    if (err) return cb(err);
+    var fetchers = names.sort().map(function(name) {
+      return function(done) {
+        fetch(name, function(err, text) {
+          if (err) return done(err);
+          monitors[name] = text;
+          done();
+        });
+      };
+    });
+    async.parallel(fetchers, function(err, _) {
+      if (err) return cb(err);
+      cb(null, monitors)
+    });
+  });
+}
+
+function remove(name, cb) {
+  redis.multi()
+    .del(k(name))
+    .srem('kwikemon:monitors', name)
+    .exec(cb);
+}
+
+function removeAll(cb) {
+  redis.smembers('kwikemon:monitors', function(err, names) {
+    if (err) return cb(err);
+    var multi = redis.multi();
+    names.forEach(function(name) {
+      multi.del(k(name));
+      multi.srem('kwikemon:monitors', name);
+    });
+    multi.exec(cb);
+  });
+}
