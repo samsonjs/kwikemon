@@ -7,7 +7,6 @@ module.exports = {
 };
 
 var http = require('http')
-  , paramify = require('paramify')
   , kwikemon = require('./kwikemon.js')
   , _server
   ;

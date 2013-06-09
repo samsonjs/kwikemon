@@ -12,8 +12,8 @@ before(function(done) {
     done();
   });
 });
-beforeEach(kwikemon.removeAll);
-after(kwikemon.removeAll);
+beforeEach(kwikemon.clear);
+after(kwikemon.clear);
 
 describe("kwikemon", function() {
   describe("#set", function() {
@@ -187,12 +187,12 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#removeAll", function() {
+  describe("#clear", function() {
     it("should remove the named monitor", function(done) {
       async.series([
           kwikemon.set('foo', 'bar')
         , kwikemon.set('baz', 'quux')
-        , kwikemon.removeAll
+        , kwikemon.clear
         , kwikemon.exists('foo')
         , kwikemon.exists('baz')
         , kwikemon.count

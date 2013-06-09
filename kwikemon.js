@@ -16,21 +16,38 @@ module.exports = {
 
   // remove
 , remove: callbackOptional(remove)
-, removeAll: removeAll
+, clear: clear
 , sweep: sweep
 
   // change redis client
-, redis: setRedis
+, redis: redis
 };
 
 var async = require('async')
-  , redis = require('redis').createClient()
+  , fs = require('fs')
+  , Redis = require('redis')
+  , redisClient
+  , toml = require('toml')
   , LineEmitter = require('./line_emitter.js')
   ;
 
-function setRedis(newRedis) {
-  if (redis) redis.end();
-  redis = newRedis;
+function redis(newRedis) {
+  if (newRedis){
+    if (redisClient) redisClient.end();
+    redisClient = newRedis;
+  }
+  else {
+    if (!redisClient) {
+      var configFile = process.env.HOME + '/.kwikemon.toml'
+        , config = null
+        ;
+      if (fs.existsSync(configFile)) {
+        config = toml.parse(fs.readFileSync(configFile)).redis;
+      }
+      redisClient = Redis.createClient(config);
+    }
+    return redisClient;
+  }
 }
 
 // Make the callback argument of a function optional.
@@ -69,7 +86,7 @@ function k(name) {
 }
 
 function exists(name, cb) {
-  redis.exists(k(name), function(err, exists) {
+  redis().exists(k(name), function(err, exists) {
     if (err) return cb(err);
     cb(null, exists == 1);
   });
@@ -91,7 +108,7 @@ function set(name, text, options, cb) {
           text: text
         , modified: Date.now()
         }
-      , multi = redis.multi()
+      , multi = redis().multi()
       ;
     if (!exists) {
       fields.created = Date.now();
@@ -119,15 +136,36 @@ function writer(name) {
 }
 
 function fetch(name, cb) {
-  redis.hgetall(k(name), cb);
+  redis().hgetall(k(name), cb);
 }
 
-function ttl(name, cb) {
-  redis.ttl(k(name), cb);
+function expire(name, ttl, cb) {
+  exists(name, function(err, exists) {
+    if (err || !exists) {
+      return cb(err || new Error('not found'));
+    }
+    redis().multi()
+      .hset(k(name), 'expire', ttl)
+      .expire(k(name), ttl)
+      .exec(cb);
+  });
+}
+
+function ttl(name, ttl, cb) {
+  if (typeof ttl == 'number') {
+    expire(name, ttl, cb);
+  }
+  else {
+    cb = ttl;
+    redis().ttl(k(name), cb);
+  }
 }
 
 function count(cb) {
-  redis.scard('kwikemon:monitors', cb);
+  sweep(function(err) {
+    if (err) return cb(err);
+    redis().scard('kwikemon:monitors', cb);
+  })
 }
 
 function sweep(cb) {
@@ -138,7 +176,7 @@ function sweep(cb) {
         if (i == n) cb();
       }
     ;
-  redis.smembers('kwikemon:monitors', function(err, names) {
+  redis().smembers('kwikemon:monitors', function(err, names) {
     if (err) return cb(err);
     n = names.length;
     if (n == 0) return cb();
@@ -160,7 +198,7 @@ function sweep(cb) {
 function list(cb) {
   sweep(function(err) {
     if (err) return cb(err);
-    redis.smembers('kwikemon:monitors', cb);
+    redis().smembers('kwikemon:monitors', cb);
   });
 }
 
@@ -185,16 +223,16 @@ function fetchAll(cb) {
 }
 
 function remove(name, cb) {
-  redis.multi()
+  redis().multi()
     .del(k(name))
     .srem('kwikemon:monitors', name)
     .exec(cb);
 }
 
-function removeAll(cb) {
-  redis.smembers('kwikemon:monitors', function(err, names) {
+function clear(cb) {
+  redis().smembers('kwikemon:monitors', function(err, names) {
     if (err) return cb(err);
-    var multi = redis.multi();
+    var multi = redis().multi();
     names.forEach(function(name) {
       multi.del(k(name));
       multi.srem('kwikemon:monitors', name);

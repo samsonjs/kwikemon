@@ -2,120 +2,166 @@
 
 var kwikemon = require('../kwikemon.js');
 
-function usage() {
-  console.log("usage: kwikemon [options]");
-  console.log("       kwikemon <name> [text]");
-  console.log();
-  console.log("options:");
-  console.log("    -c, --clear          remove all monitors");
-  console.log("    -f, --fetch <name>   show the text of the named monitor");
-  console.log("    -n, --count          count monitors");
-  console.log("    -h, --help           show what you're reading now");
-  console.log("    -l, --list           show all monitors");
-  console.log("    -r, --remove <name>  remove the named monitor");
-  console.log("    -s, --sweep          clean up expired & deleted monitors");
-  console.log("    -t, --ttl <name>     show the TTL of the named monitor");
+var commands = {};
+function defineCommand(name, handler, args) {
+  commands[name] = { handler: handler, args: args };
+}
+defineCommand('clear',  clear);
+defineCommand('count',  count);
+defineCommand('get',    get,    'name');
+defineCommand('help',   usage);
+defineCommand('list',   list);
+defineCommand('remove', remove, 'name');
+defineCommand('set',    set,    'name text');
+defineCommand('sweep',  sweep);
+defineCommand('ttl',    ttl,    'name [ttl]');
+defineCommand('write',  write,  'name');
+
+function main() {
+  var cmd = process.argv[2]
+    , handler = commands[cmd] && commands[cmd].handler
+    ;
+  if (handler) {
+    handler.apply(null, process.argv.slice(3));
+  }
+  else {
+    if (cmd) {
+      console.log('error: unknown command ' + cmd);
+    }
+    usage();
+    process.exit(1);
+  }
 }
 
-var opt = process.argv[2]
-  , name = process.argv[2]
-  , text = process.argv[3]
-  ;
-if (opt && opt[0] == '-') {
-  switch (opt) {
-  case '-c':
-  case '--clear':
-    kwikemon.removeAll(function(err) {
-      process.exit(0);
-    });
-    break;
+function clear() {
+  kwikemon.clear(function(err) {
+    process.exit(0);
+  });
+}
 
-  case '-f':
-  case '--fetch':
-    var name = process.argv[3];
+function count() {
+  kwikemon.count(function(err, n) {
+    console.log(n);
+    process.exit(0);
+  });
+}
+
+function expire(name, ttl) {
+  kwikemon.ttl(name, ttl, function(err) {
+    if (err && err.message == 'not found') {
+      console.log('no monitor named', name);
+      process.exit(1);
+    }
+    else if (err) {
+      console.log('error: ' + (err.message || err));
+      process.exit(1);
+    }
+    else {
+      process.exit(0);
+    }
+  });
+}
+
+function get(name) {
+  if (name) {
     kwikemon.fetch(name, function(err, mon) {
       if (mon) {
         console.log(mon.text);
         process.exit(0);
       }
       else {
-        console.log('error: no monitor named', name);
+        console.log('no monitor named', name);
         process.exit(1);
       }
     });
-    break;
+  }
+  else {
+    console.log('get requires a name');
+    process.exit(1);
+  }
+}
 
-  case '-l':
-  case '--list':
-    kwikemon.fetchAll(function(err, monitors) {
-      Object.keys(monitors).forEach(function(name) {
-        console.log(name + ':', monitors[name].text);
-      });
+function list() {
+  kwikemon.fetchAll(function(err, monitors) {
+    Object.keys(monitors).forEach(function(name) {
+      console.log(name + ':', monitors[name].text);
+    });
+    process.exit(0);
+  });
+}
+
+function remove(name) {
+  if (name) {
+    kwikemon.remove(name, function(err) {
+      process.exit(0);
+    })
+  }
+  else {
+    console.log('remove requires a name');
+    process.exit(1);
+  }
+}
+
+function set(name, text) {
+  if (name && text) {
+    kwikemon.set(name, text, function() {
       process.exit(0);
     });
-    break;
+  }
+  else {
+    console.log('set requires a name and some text')
+    process.exit(1);
+  }
+}
 
-  case '-n':
-  case '--count':
-    kwikemon.count(function(err, n) {
-      console.log(n);
-      process.exit(0);
-    });
-    break;
+function sweep() {
+  kwikemon.sweep(function(err) {
+    process.exit(0);
+  });
+}
 
-  case '-r':
-  case '--remove':
-    name = process.argv[3];
-    if (name) {
-      kwikemon.remove(name, function(err) {
-        process.exit(0);
-      })
-    }
-    else {
-      console.log("error: --remove requires a name");
-      process.exit(1);
-    }
-    break;
-
-  case '-s':
-  case '--sweep':
-    kwikemon.sweep(function(err) {
-      process.exit(0);
-    });
-    break;
-
-  case '-t':
-  case '--ttl':
-    var name = process.argv[3];
+function ttl(name, ttl) {
+  if (ttl) return expire(name, Number(ttl));
+  if (name) {
     kwikemon.ttl(name, function(err, ttl) {
       if (typeof ttl == 'number') {
         console.log(ttl);
         process.exit(0);
       }
       else {
-        console.log('error: no monitor named', name);
+        console.log('no monitor named', name);
         process.exit(1);
       }
     });
-    break;
-
-  default:
-    usage();
-    process.exit(name == '-h' || name == '--help' ? 0 : 1);
+  }
+  else {
+    console.log('ttl requires a name');
+    process.exit(1);
   }
 }
-else if (name && text) {
-  kwikemon.set(name, text, function() {
-    process.exit(0);
+
+function write(name) {
+  if (name) {
+    process.stdin.pipe(kwikemon.writer(name));
+    process.stdin.on('end', function() {
+      process.exit(0);
+    });
+  }
+  else {
+    console.log('write requires a name');
+    process.exit(1);
+  }
+}
+
+function usage() {
+  console.log('usage: kwikemon <command> [args...]');
+  console.log('commands:');
+  Object.keys(commands).sort().forEach(function(name) {
+    var args = commands[name].args || '';
+    console.log('     ' + name + ' ' + args);
   });
 }
-else if (name) {
-  process.stdin.pipe(kwikemon.writer(name));
-  process.stdin.on('end', function() {
-    process.exit(0);
-  });
-}
-else {
-  usage();
-  process.exit(1);
+
+if (require.main == module) {
+  main();
 }
