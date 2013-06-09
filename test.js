@@ -131,6 +131,17 @@ describe("kwikemon", function() {
         done();
       });
     });
+
+    it("should set a ttl if given one", function(done) {
+      kwikemon.set('foo', 'bar', function(err) {
+        kwikemon.ttl('foo', 100, function(err) {
+          kwikemon.ttl('foo', function(err, ttl) {
+            assert(ttl <= 100);
+            done();
+          });
+        });
+      });
+    });
   });
 
   describe("#fetchAll", function() {
