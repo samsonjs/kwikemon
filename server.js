@@ -40,7 +40,7 @@ function handleRequest(req, res) {
     name = name.replace(RegExp('\.' + type + '$'), '');
   }
   if (name) {
-    kwikemon.fetch(name, function(err, text) {
+    kwikemon.get(name, function(err, text) {
       if (err) {
         res.end('error: ' + (err.message || 'unknown'));
         return;
@@ -50,7 +50,7 @@ function handleRequest(req, res) {
   }
   // all
   else {
-    kwikemon.fetchAll(function(err, monitors) {
+    kwikemon.getAll(function(err, monitors) {
       if (err) {
         res.end('error: ' + (err.message || 'unknown'));
         return;

@@ -64,7 +64,7 @@ function expire(name, ttl) {
 
 function get(name) {
   if (name) {
-    kwikemon.fetch(name, function(err, mon) {
+    kwikemon.get(name, function(err, mon) {
       if (mon) {
         console.log(mon.text);
         process.exit(0);
@@ -82,7 +82,7 @@ function get(name) {
 }
 
 function list() {
-  kwikemon.fetchAll(function(err, monitors) {
+  kwikemon.getAll(function(err, monitors) {
     Object.keys(monitors).forEach(function(name) {
       console.log(name + ':', monitors[name].text);
     });

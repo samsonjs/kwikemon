@@ -19,7 +19,7 @@ describe("kwikemon", function() {
   describe("#set", function() {
     it("should set text", function(done) {
       kwikemon.set('foo', 'bar', function(err) {
-        kwikemon.fetch('foo', function(err, mon) {
+        kwikemon.get('foo', function(err, mon) {
           assert(mon.text == 'bar');
           done();
         });
@@ -28,7 +28,7 @@ describe("kwikemon", function() {
 
     it("should overwrite text", function(done) {
       kwikemon.set('foo', 'baz', function(err) {
-        kwikemon.fetch('foo', function(err, mon) {
+        kwikemon.get('foo', function(err, mon) {
           assert(mon.text == 'baz');
           done();
         });
@@ -92,12 +92,12 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#fetch", function() {
-    it("should fetch the last text monitored", function(done) {
+  describe("#get", function() {
+    it("should get the last text monitored", function(done) {
       async.series([
           kwikemon.set('foo', 'bar')
         , kwikemon.set('foo', 'marcellus')
-        , kwikemon.fetch('foo')
+        , kwikemon.get('foo')
         ],
         function(err, results) {
           var mon = results[2];
@@ -107,8 +107,8 @@ describe("kwikemon", function() {
       );
     });
 
-    it("should fetch null for non-existent monitors", function(done) {
-      kwikemon.fetch('non-existent', function(err, mon) {
+    it("should get null for non-existent monitors", function(done) {
+      kwikemon.get('non-existent', function(err, mon) {
         assert(mon == null);
         done();
       });
@@ -116,7 +116,7 @@ describe("kwikemon", function() {
   });
 
   describe("#ttl", function() {
-    it("should fetch the last TTL set", function(done) {
+    it("should get the last TTL set", function(done) {
       kwikemon.set('foo', 'bar', { ttl: 300 }, function(err) {
         kwikemon.ttl('foo', function(err, ttl) {
           assert(ttl <= 300);
@@ -144,13 +144,13 @@ describe("kwikemon", function() {
     });
   });
 
-  describe("#fetchAll", function() {
-    it("should fetch all monitors", function(done) {
+  describe("#getAll", function() {
+    it("should get all monitors", function(done) {
       async.series([
           kwikemon.set('a', '1')
         , kwikemon.set('b', '2')
         , kwikemon.set('c', '3')
-        , kwikemon.fetchAll
+        , kwikemon.getAll
         ],
         function(err, results) {
           var monitors = results.pop()

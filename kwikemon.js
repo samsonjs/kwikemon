@@ -8,11 +8,11 @@ module.exports = {
 
   // read
 , exists: callbackOptional(exists)
-, fetch: callbackOptional(fetch)
+, get: callbackOptional(get)
 , ttl: callbackOptional(ttl)
-, list: list
-, fetchAll: fetchAll
 , count: count
+, list: list
+, getAll: getAll
 
   // remove
 , remove: callbackOptional(remove)
@@ -56,15 +56,15 @@ function redis(newRedis) {
 // that accepts the callback is returned, with the
 // rest of the arguments fixed (like bind).
 //
-// function fetch(id, cb) { db.fetch(id, cb); }
-// fetch = callbackOptional(fetch);
+// function get(id, cb) { db.get(id, cb); }
+// get = callbackOptional(get);
 //
 // function print(err, x) { if (err) throw err; console.log(x); }
 //
-// fetch(1, print);
+// get(1, print);
 //
-// var fetch1 = fetch(1);
-// fetch1(print);
+// var get1 = get(1);
+// get1(print);
 function callbackOptional(fn, ctx) {
   return function() {
     var args = Array.prototype.slice.call(arguments);
@@ -135,7 +135,7 @@ function writer(name) {
   return le;
 }
 
-function fetch(name, cb) {
+function get(name, cb) {
   redis().hgetall(k(name), cb);
 }
 
@@ -202,20 +202,20 @@ function list(cb) {
   });
 }
 
-function fetchAll(cb) {
+function getAll(cb) {
   var monitors = {};
   list(function(err, names) {
     if (err) return cb(err);
-    var fetchers = names.sort().map(function(name) {
+    var geters = names.sort().map(function(name) {
       return function(done) {
-        fetch(name, function(err, text) {
+        get(name, function(err, text) {
           if (err) return done(err);
           monitors[name] = text;
           done();
         });
       };
     });
-    async.parallel(fetchers, function(err, _) {
+    async.parallel(geters, function(err, _) {
       if (err) return cb(err);
       cb(null, monitors)
     });
