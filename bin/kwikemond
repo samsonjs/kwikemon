@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-var server = require('../server.js')
-  , port = process.argv[2]
-  , host = process.argv[3]
+var port = process.argv[2] || 1111
+  , host = process.argv[3] || '127.0.0.1'
+  , app = require('../app.js')
   ;
 
-server.start(port, host);
+app.listen(port, host);
+console.log('kwikemond listening on ' + host + ':' + port);

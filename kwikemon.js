@@ -105,7 +105,8 @@ function set(name, text, options, cb) {
     ;
   exists(name, function(err, exists) {
     var fields = {
-          text: text
+          name: name
+        , text: text
         , modified: Date.now()
         }
       , multi = redis().multi()

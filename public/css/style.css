@@ -1,0 +1,15 @@
+ul#monitors {
+  list-style: none;
+}
+
+li.monitor {
+
+}
+
+#footer {
+  width: 80%;
+  margin: 0.5em auto;
+  padding: 0.3em 1em;
+  text-align: center;
+  border-top: solid 1px #aaa;
+}

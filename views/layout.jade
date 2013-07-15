@@ -1,0 +1,13 @@
+doctype 5
+html(lang="en")
+  head
+    title kwikemon
+    link(rel="stylesheet", href="/css/style.css")
+  body
+    block nav
+    block title
+      h1= pageTitle || 'kwikemon'
+    #content
+      block content
+    #footer
+      a(href="https://github.com/samsonjs/kwikemon") kwikemon #{version}

@@ -11,8 +11,11 @@
   , "kwikemond": "./bin/kwikemond"
   }
 , "dependencies": {
-    "redis": "0.8.x"
-  , "async": "0.2.x"
+    "async": "0.2.x"
+  , "express": "3.0.x"
+  , "jade": "0.31.x"
+  , "negotiator": "0.2.x"
+  , "redis": "0.8.x"
   , "toml": "0.4.x"
   }
 , "devDependencies": {

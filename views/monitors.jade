@@ -1,0 +1,5 @@
+extends layout
+block content
+  ul#monitors
+  - each monitor in monitors
+    li.monitor: a(href="/#{monitor.name}") #{monitor.name}: #{monitor.text}
