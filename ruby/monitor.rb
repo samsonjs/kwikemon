@@ -70,7 +70,7 @@ module Kwikemon
     end
 
     def text
-      @text ||= exists? ? redis.hget(key, 'name')
+      @text ||= exists? ? redis.hget(key, 'name') : nil
     end
 
 

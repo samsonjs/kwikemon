@@ -1,10 +1,18 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    blankslate (2.1.2.4)
+    hashie (2.0.5)
+    parslet (1.5.0)
+      blankslate (~> 2.0)
     redis (3.0.4)
+    toml (0.0.4)
+      parslet
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  hashie (~> 2.0.5)
   redis (~> 3.0.4)
+  toml (~> 0.0.4)

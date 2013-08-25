@@ -3,7 +3,9 @@
 # MIT License
 # http://sjs.mit-license.org
 
+require 'hashie'
 require 'redis'
+require 'toml'
 require File.expand_path('../monitor.rb', __FILE__)
 
 module Kwikemon
@@ -13,7 +15,7 @@ module Kwikemon
   include Enumerable
 
   def redis
-    @redis ||= Redis.new
+    @redis ||= Redis.new(config.redis)
   end
 
   def redis=(redis)
@@ -107,6 +109,21 @@ module Kwikemon
   def sweep
     list.each do |name|
       remove(name) unless exists?(name)
+    end
+  end
+
+private
+
+  def config
+    @config ||= Hashie::Mash.new(load_config)
+  end
+
+  def load_config
+    path = File.join(ENV['HOME'], '.kwikemon.toml')
+    if File.exists?(path)
+      TOML.load_file(path)
+    else
+      {}
     end
   end
 
