@@ -38,6 +38,10 @@ module Kwikemon
     redis.sadd(key('monitors'), name)
   end
 
+  Monitor.on(:remove) do |name|
+    redis.srem(key('monitors'), name)
+  end
+
 
   # Set `name` to `value`.
   #
@@ -95,7 +99,7 @@ module Kwikemon
 
   # Remove the monitor named `name`.
   def remove(name)
-    Monitor.new(name).delete
+    Monitor.new(name).remove
   end
 
   # Clear all monitors.
@@ -111,6 +115,7 @@ module Kwikemon
       remove(name) unless exists?(name)
     end
   end
+
 
 private
 

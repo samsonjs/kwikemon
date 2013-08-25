@@ -53,6 +53,12 @@ module Kwikemon
       self
     end
 
+    def remove
+      redis.del(key)
+      self.class.emit(:remove, name)
+      self
+    end
+
     def key
       Kwikemon.key("monitor:#{name}")
     end
@@ -70,7 +76,7 @@ module Kwikemon
     end
 
     def text
-      @text ||= exists? ? redis.hget(key, 'name') : nil
+      @text ||= exists? ? redis.hget(key, 'text') : nil
     end
 
 
