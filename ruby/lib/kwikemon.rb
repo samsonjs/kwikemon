@@ -19,7 +19,7 @@ module Kwikemon
   include Enumerable
 
   def redis
-    @redis ||= Redis.new(config.redis)
+    @redis ||= Redis.new(config.redis || {})
   end
 
   def redis=(redis)
