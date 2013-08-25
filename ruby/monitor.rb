@@ -42,7 +42,7 @@ module Kwikemon
     def create
       raise MonitorError.new('name cannot be blank') if name.to_s.strip.length == 0
       redis.hmset(key, *to_a)
-      emit(:create, name)
+      self.class.emit(:create, name)
       self
     end
 
