@@ -39,12 +39,13 @@ function redis(newRedis) {
   else {
     if (!redisClient) {
       var configFile = process.env.HOME + '/.kwikemon.toml'
-        , config = null
+        , config = {}
         ;
       if (fs.existsSync(configFile)) {
-        config = toml.parse(fs.readFileSync(configFile)).redis;
+        config = toml.parse(fs.readFileSync(configFile));
       }
-      redisClient = Redis.createClient(config);
+      config.redis = config.redis || {};
+      redisClient = Redis.createClient(config.redis.port, config.redis.host, config.redis.options);
     }
     return redisClient;
   }
