@@ -1,5 +1,5 @@
 { "name": "kwikemon"
-, "version": "0.0.4"
+, "version": "0.0.5"
 , "description": "monitor one-off things on your servers"
 , "author": "Sami Samhuri <sami@samhuri.net>"
 , "license": "MIT"
