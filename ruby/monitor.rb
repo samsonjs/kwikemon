@@ -85,7 +85,7 @@ module Kwikemon
         text: text,
         ttl: ttl || DefaultTTL,
         created: created || Time.now.to_i,
-        modified: modified || Time.now_to_i
+        modified: modified || Time.now.to_i
       }
     end
 
