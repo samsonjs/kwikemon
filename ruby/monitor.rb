@@ -29,7 +29,7 @@ module Kwikemon
 
     def save
       if exists?
-        update
+        update(text)
       else
         create
       end
