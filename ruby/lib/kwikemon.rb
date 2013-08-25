@@ -3,10 +3,14 @@
 # MIT License
 # http://sjs.mit-license.org
 
+lib_dir = File.expand_path('../', __FILE__)
+$LOAD_PATH << lib_dir unless $LOAD_PATH.include?(lib_dir)
+
 require 'hashie'
 require 'redis'
 require 'toml'
-require File.expand_path('../monitor.rb', __FILE__)
+require 'kwikemon/monitor'
+require 'kwikemon/version'
 
 module Kwikemon
 
