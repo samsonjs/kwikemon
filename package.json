@@ -1,28 +1,35 @@
-{ "name": "kwikemon"
-, "version": "0.0.6"
-, "description": "monitor one-off things on your servers"
-, "author": "Sami Samhuri <sami@samhuri.net>"
-, "license": "MIT"
-, "repository": "https://github.com/samsonjs/kwikemon"
-, "keywords": [ "monitor", "server", "watch", "one-off", "task" ]
-, "main": "kwikemon.js"
-, "bin": {
-    "kwikemon": "./bin/kwikemon"
-  , "kwikemond": "./bin/kwikemond"
-  }
-, "dependencies": {
-    "async": "0.2.x"
-  , "express": "3.0.x"
-  , "jade": "0.31.x"
-  , "negotiator": "0.2.x"
-  , "redis": "0.8.x"
-  , "toml": "0.4.x"
-  }
-, "devDependencies": {
-    "mocha": "1.10.x"
-  , "better-assert": "1.0.x"
-  }
-, "engines": {
+{
+  "name": "kwikemon",
+  "version": "0.0.6",
+  "description": "monitor one-off things on your servers",
+  "author": "Sami Samhuri <sami@samhuri.net>",
+  "license": "MIT",
+  "repository": "https://github.com/samsonjs/kwikemon",
+  "keywords": [
+    "monitor",
+    "server",
+    "watch",
+    "one-off",
+    "task"
+  ],
+  "main": "kwikemon.js",
+  "bin": {
+    "kwikemon": "./bin/kwikemon",
+    "kwikemond": "./bin/kwikemond"
+  },
+  "dependencies": {
+    "async": "0.2.x",
+    "express": "4.16.0",
+    "jade": "0.31.x",
+    "negotiator": "0.2.x",
+    "redis": "0.8.x",
+    "toml": "0.4.x"
+  },
+  "devDependencies": {
+    "mocha": "1.10.x",
+    "better-assert": "1.0.x"
+  },
+  "engines": {
     "node": ">=0.10"
   }
 }
